@@ -84,8 +84,8 @@ for epoch in range(cfg.num_epochs + 1):
     print("Epoch: {}/{} G_loss: {} D_loss: {}".format(epoch, cfg.num_epochs, gen_loss, dis_loss))
     # schedule_G.step()
     # schedule_D.step()
-    if best_loss > dis_loss * config.alpha + gen_loss:
-        best_loss = dis_loss * config.alpha + gen_loss
+    if best_loss > dis_loss * cfg.alpha + gen_loss:
+        best_loss = dis_loss * cfg.alpha + gen_loss
         torch.save(G.state_dict(), "ckpt/G.pth")
         torch.save(D.state_dict(), "ckpt/D.pth")
         
