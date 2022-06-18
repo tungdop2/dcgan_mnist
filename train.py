@@ -71,7 +71,7 @@ for epoch in range(cfg.num_epoch):
         torch.save(G.state_dict(), "ckpt/G.pth")
         torch.save(D.state_dict(), "ckpt/D.pth")
         vutils.save_image(fake_imgs.data[:16], "output/epoch_{}.png".format(epoch), normalize=True)
-        vutils.save_image(real_imgs.data[:16], "output/real_epoch_{}.png".format(epoch), normalize=True)
+        # vutils.save_image(real_imgs.data[:16], "output/real_epoch_{}.png".format(epoch), normalize=True)
 
 
 
