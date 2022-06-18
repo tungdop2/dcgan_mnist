@@ -27,7 +27,7 @@ optimizer_D = torch.optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))
 real_label = 1.
 fake_label = 0.
 
-for epoch in range(100):
+for epoch in range(cfg.num_epoch):
     for real_imgs, _ in tqdm(dataloader):
         real_imgs = real_imgs.to(device)
         labels = torch.full((cfg.batch_size,), real_label, device=device)
