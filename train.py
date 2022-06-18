@@ -16,7 +16,7 @@ D = discriminator.Discriminator(cfg.num_classes, cfg.num_channels).to(device)
 D.apply(weights_init)
 
 dataset = dataset.get_dataset()
-dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=2, drop_last=True)
+dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=cfg.num_workers, drop_last=True)
 
 criterion = nn.BCELoss()
 optimizer_G = torch.optim.Adam(G.parameters(), lr=0.0002, betas=(0.5, 0.999))
