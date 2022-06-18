@@ -63,13 +63,13 @@ for epoch in range(cfg.num_epoch):
     print("Epoch: {}/{} \nG_loss: {} with lr: {} \nD_loss: {} with lr: {}".format(epoch, cfg.num_epoch, gen_loss, optimizer_G.param_groups[0]['lr'], dis_loss, optimizer_D.param_groups[0]['lr']))
     # schedule_G.step()
     # schedule_D.step()
-    if epoch % 10 == 0:
+    if epoch % 20 == 0:
         if not os.path.exists('ckpt'):
             os.makedirs('ckpt')
         if not os.path.exists('output'):
             os.makedirs('output')
-        torch.save(G.state_dict(), "ckpt/G_epoch_{}.pth".format(epoch))
-        torch.save(D.state_dict(), "ckpt/D_epoch_{}.pth".format(epoch))
+        torch.save(G.state_dict(), "ckpt/G.pth")
+        torch.save(D.state_dict(), "ckpt/D.pth")
         vutils.save_image(fake_imgs.data[:16], "output/epoch_{}.png".format(epoch), normalize=True)
         vutils.save_image(real_imgs.data[:16], "output/real_epoch_{}.png".format(epoch), normalize=True)
 
