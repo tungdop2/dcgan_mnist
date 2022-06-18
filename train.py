@@ -6,6 +6,7 @@ import dataset, generator, discriminator, config
 from utils import weights_init
 import torchvision.utils as vutils
 from tqdm import tqdm
+import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cfg = config.config
@@ -59,11 +60,14 @@ for epoch in range(cfg.num_epoch):
         gen_loss = gen_loss.mean()
         optimizer_G.step()
 
-    print("Epoch: {}/{} \nG_loss: {} with lr: {} \nD_loss: {} with lr: {}".format(epoch, 100, gen_loss, optimizer_G.param_groups[0]['lr'], dis_loss, optimizer_D.param_groups[0]['lr']))
+    print("Epoch: {}/{} \nG_loss: {} with lr: {} \nD_loss: {} with lr: {}".format(epoch, cfg.num_epoch, gen_loss, optimizer_G.param_groups[0]['lr'], dis_loss, optimizer_D.param_groups[0]['lr']))
     # schedule_G.step()
     # schedule_D.step()
     if epoch % 10 == 0:
-
+        if not os.path.exists('ckpt'):
+            os.makedirs('ckpt')
+        if not os.path.exists('output'):
+            os.makedirs('output')
         torch.save(G.state_dict(), "ckpt/G_epoch_{}.pth".format(epoch))
         torch.save(D.state_dict(), "ckpt/D_epoch_{}.pth".format(epoch))
         vutils.save_image(fake_imgs.data[:16], "output/epoch_{}.png".format(epoch), normalize=True)
