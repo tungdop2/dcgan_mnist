@@ -7,13 +7,25 @@ from utils import weights_init
 import torchvision.utils as vutils
 from tqdm import tqdm
 import os
+import random
+
+#set manual seed to a constant get a consistent output
+manualSeed = random.randint(1, 10000)
+print("Random Seed: ", manualSeed)
+random.seed(manualSeed)
+torch.manual_seed(manualSeed)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Device: ", device)
 cfg = config.config
+if not os.path.exists('ckpt'):
+    os.makedirs('ckpt')
+if not os.path.exists('output'):
+    os.makedirs('output')
 
-G = generator.Generator(cfg.num_classes, cfg.noise_size, cfg.num_channels).to(device)
+G = generator.Generator(cfg.num_classes, cfg.noise_size, cfg.num_g_filters).to(device)
 G.apply(weights_init)
-D = discriminator.Discriminator(cfg.num_classes, cfg.num_channels).to(device)
+D = discriminator.Discriminator(cfg.num_classes, cfg.num_d_filters).to(device)
 D.apply(weights_init)
 
 dataset = dataset.get_dataset()
@@ -27,8 +39,12 @@ optimizer_D = torch.optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))
 
 real_label = 1.
 fake_label = 0.
+fixed_noise = torch.randn(16, cfg.noise_size, 1, 1, device=device)
+best_loss = 100.
 
-for epoch in range(cfg.num_epoch):
+for epoch in range(cfg.num_epochs + 1):
+    G.train()
+    D.train()
     for real_imgs, _ in tqdm(dataloader):
         real_imgs = real_imgs.to(device)
         labels = torch.full((cfg.batch_size,), real_label, device=device)
@@ -53,6 +69,7 @@ for epoch in range(cfg.num_epoch):
 
         # Train G
         G.zero_grad()
+        labels.fill_(real_label)
         dis_fake_out = D(fake_imgs)
         dis_fake_loss = criterion(dis_fake_out, labels)
         gen_loss = criterion(dis_fake_out, labels)
@@ -60,18 +77,18 @@ for epoch in range(cfg.num_epoch):
         gen_loss = gen_loss.mean()
         optimizer_G.step()
 
-    print("Epoch: {}/{} \nG_loss: {} with lr: {} \nD_loss: {} with lr: {}".format(epoch, cfg.num_epoch, gen_loss, optimizer_G.param_groups[0]['lr'], dis_loss, optimizer_D.param_groups[0]['lr']))
+    print("Epoch: {}/{} G_loss: {} D_loss: {}".format(epoch, cfg.num_epoch, gen_loss, dis_loss))
     # schedule_G.step()
     # schedule_D.step()
-    if epoch % 20 == 0:
-        if not os.path.exists('ckpt'):
-            os.makedirs('ckpt')
-        if not os.path.exists('output'):
-            os.makedirs('output')
+    if best_loss > dis_loss * config.alpha + gen_loss:
+        best_loss = dis_loss * config.alpha + gen_loss
         torch.save(G.state_dict(), "ckpt/G.pth")
         torch.save(D.state_dict(), "ckpt/D.pth")
-        vutils.save_image(fake_imgs.data[:16], "output/epoch_{}.png".format(epoch), normalize=True)
-        # vutils.save_image(real_imgs.data[:16], "output/real_epoch_{}.png".format(epoch), normalize=True)
+        
+    if epoch % 50 == 0:
+        G.eval()
+        fake_imgs = G(fixed_noise)
+        vutils.save_image(fake_imgs.detach(), "output/{}.png".format(epoch), normalize=True)
 
 
 
