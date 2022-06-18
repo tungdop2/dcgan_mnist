@@ -20,9 +20,9 @@ dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_wo
 
 criterion = nn.BCELoss()
 optimizer_G = torch.optim.Adam(G.parameters(), lr=0.0002, betas=(0.5, 0.999))
-schedule_G = torch.optim.lr_scheduler.StepLR(optimizer_G, step_size=50, gamma=0.1)
+# schedule_G = torch.optim.lr_scheduler.StepLR(optimizer_G, step_size=50, gamma=0.1)
 optimizer_D = torch.optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))
-schedule_D = torch.optim.lr_scheduler.StepLR(optimizer_D, step_size=50, gamma=0.1)
+# schedule_D = torch.optim.lr_scheduler.StepLR(optimizer_D, step_size=50, gamma=0.1)
 
 real_label = 1.
 fake_label = 0.
@@ -60,8 +60,8 @@ for epoch in range(100):
         optimizer_G.step()
 
     print("Epoch: {}/{} \nG_loss: {} with lr: {} \nD_loss: {} with lr: {}".format(epoch, 100, gen_loss, optimizer_G.param_groups[0]['lr'], dis_loss, optimizer_D.param_groups[0]['lr']))
-    schedule_G.step()
-    schedule_D.step()
+    # schedule_G.step()
+    # schedule_D.step()
     if epoch % 10 == 0:
 
         torch.save(G.state_dict(), "ckpt/G_epoch_{}.pth".format(epoch))
