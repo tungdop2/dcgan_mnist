@@ -1,3 +1,4 @@
+from nbformat import write
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +11,7 @@ import os
 import random
 
 #set manual seed to a constant get a consistent output
-manualSeed = random.randint(1, 10000)
+manualSeed = random.randint(1, 2120)
 print("Random Seed: ", manualSeed)
 random.seed(manualSeed)
 torch.manual_seed(manualSeed)
@@ -77,6 +78,9 @@ for epoch in range(cfg.num_epochs + 1):
         gen_loss = gen_loss.mean()
         optimizer_G.step()
 
+    # write to training log
+    with open('train_log.txt', 'a') as f:
+        f.write('Epoch: {} \t Generator Loss: {} \t Discriminator Loss: {}\n'.format(epoch, gen_loss, dis_loss))
     print("Epoch: {}/{} G_loss: {} D_loss: {}".format(epoch, cfg.num_epoch, gen_loss, dis_loss))
     # schedule_G.step()
     # schedule_D.step()
