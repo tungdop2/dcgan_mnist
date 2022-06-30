@@ -62,23 +62,21 @@ for epoch in range(cfg.num_epochs + 1):
 
             labels = torch.full((cfg.batch_size,), real_label, device=device)
             dis_real_loss = criterion(dis_real_out, labels)
-            # dis_real_loss.backward()
             dis_real_loss = dis_real_loss.mean()
+            dis_real_loss.backward()
 
             labels.fill_(fake_label)
             dis_fake_loss = criterion(dis_fake_out, labels)
-            # dis_fake_loss.backward()
             dis_fake_loss = dis_fake_loss.mean()
-
+            dis_fake_loss.backward()
             dis_loss = dis_real_loss + dis_fake_loss
 
         elif cfg.loss == 'WGAN':
-
             dis_real_loss = -torch.mean(dis_real_out)
             dis_fake_loss = torch.mean(dis_fake_out)
             dis_loss = dis_real_loss + dis_fake_loss
-
-        dis_loss.backward()
+            dis_loss.backward()
+            
         optimizer_D.step()
 
         # Train G
