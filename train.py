@@ -58,7 +58,7 @@ for epoch in range(cfg.num_epochs + 1):
         # Train D
         D.zero_grad()
         dis_real_out = D(real_imgs)
-        if config.loss == 'BCE':
+        if cfg.loss == 'BCE':
 
             labels = torch.full((cfg.batch_size,), real_label, device=device)
             dis_real_loss = criterion(dis_real_out, labels)
@@ -72,7 +72,7 @@ for epoch in range(cfg.num_epochs + 1):
 
             dis_loss = dis_real_loss + dis_fake_loss
 
-        elif config.loss == 'WGAN':
+        elif cfg.loss == 'WGAN':
 
             dis_real_loss = -torch.mean(dis_real_out)
             dis_fake_loss = torch.mean(dis_fake_out)
@@ -86,10 +86,10 @@ for epoch in range(cfg.num_epochs + 1):
         G.zero_grad()
         labels.fill_(real_label)
         dis_fake_out = D(fake_imgs)
-        if config.loss == 'BCE':
+        if cfg.loss == 'BCE':
             gen_loss = criterion(dis_fake_out, labels)
             gen_loss = gen_loss.mean()
-        elif config.loss == 'WGAN':
+        elif cfg.loss == 'WGAN':
             gen_loss = -torch.mean(dis_fake_out)
 
         gen_loss.backward()
