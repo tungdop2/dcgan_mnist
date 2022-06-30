@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 class Generator(nn.Module):
-    def __init__(self, num_classes=1, noise_size=128, num_g_filters=64):
+    def __init__(self, num_classes=1, noise_size=100, num_g_filters=64):
         super(Generator, self).__init__()
         self.gen = nn.Sequential(
             nn.ConvTranspose2d(noise_size, num_g_filters * 8, 4, 1, 0, bias=False),
