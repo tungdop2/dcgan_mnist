@@ -29,8 +29,8 @@ G = generator.Generator(cfg.num_classes, cfg.noise_size, cfg.num_g_filters).to(d
 G.apply(weights_init)
 D = discriminator.Discriminator(cfg.num_classes, cfg.num_d_filters).to(device)
 D.apply(weights_init)
-summary(G, (cfg.noise_size, cfg.num_classes))
-summary(D, (cfg.num_classes,))
+# summary(G, (cfg.noise_size, cfg.num_classes))
+# summary(D, (cfg.num_classes,))
 
 dataset = dataset.get_dataset()
 dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=cfg.num_workers, drop_last=True)
