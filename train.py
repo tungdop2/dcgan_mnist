@@ -76,8 +76,7 @@ for epoch in range(cfg.num_epochs + 1):
 
             dis_real_loss = -torch.mean(dis_real_out)
             dis_fake_loss = torch.mean(dis_fake_out)
-            grad_penalty = calculate_gradient_penalty(D, real_imgs.data, fake_imgs.data, device)
-            dis_loss = dis_real_loss + dis_fake_loss + grad_penalty
+            dis_loss = dis_real_loss + dis_fake_loss
 
         dis_loss.backward()
         optimizer_D.step()
