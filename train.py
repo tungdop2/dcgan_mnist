@@ -4,8 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import dataset, generator, discriminator, config
-from utils import weights_init
+from utils import *
 import torchvision.utils as vutils
+from torchsummary import summary
 from tqdm import tqdm
 import os
 import random
@@ -28,6 +29,8 @@ G = generator.Generator(cfg.num_classes, cfg.noise_size, cfg.num_g_filters).to(d
 G.apply(weights_init)
 D = discriminator.Discriminator(cfg.num_classes, cfg.num_d_filters).to(device)
 D.apply(weights_init)
+summary(G, (cfg.noise_size, cfg.num_classes))
+summary(D, (cfg.num_classes,))
 
 dataset = dataset.get_dataset()
 dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=cfg.num_workers, drop_last=True)
@@ -48,34 +51,48 @@ for epoch in range(cfg.num_epochs + 1):
     D.train()
     for real_imgs, _ in tqdm(dataloader):
         real_imgs = real_imgs.to(device)
-        labels = torch.full((cfg.batch_size,), real_label, device=device)
+        noise = torch.randn(cfg.batch_size, cfg.noise_size, 1, 1, device=device)
+        fake_imgs = G(noise)
+        dis_fake_out = D(fake_imgs.detach())
 
         # Train D
         D.zero_grad()
         dis_real_out = D(real_imgs)
-        dis_real_loss = criterion(dis_real_out, labels)
-        dis_real_loss.backward()
-        dis_real_loss = dis_real_loss.mean()
+        if config.loss == 'BCE':
 
-        noise = torch.randn(cfg.batch_size, cfg.noise_size, 1, 1, device=device)
-        fake_imgs = G(noise)
-        labels.fill_(fake_label)
-        dis_fake_out = D(fake_imgs.detach())
-        dis_fake_loss = criterion(dis_fake_out, labels)
-        dis_fake_loss.backward()
-        dis_fake_loss = dis_fake_loss.mean()
+            labels = torch.full((cfg.batch_size,), real_label, device=device)
+            dis_real_loss = criterion(dis_real_out, labels)
+            # dis_real_loss.backward()
+            dis_real_loss = dis_real_loss.mean()
 
-        dis_loss = dis_real_loss + dis_fake_loss
+            labels.fill_(fake_label)
+            dis_fake_loss = criterion(dis_fake_out, labels)
+            # dis_fake_loss.backward()
+            dis_fake_loss = dis_fake_loss.mean()
+
+            dis_loss = dis_real_loss + dis_fake_loss
+
+        elif config.loss == 'WGAN':
+
+            dis_real_loss = -torch.mean(dis_real_out)
+            dis_fake_loss = torch.mean(dis_fake_out)
+            grad_penalty = calculate_gradient_penalty(D, real_imgs.data, fake_imgs.data, device)
+            dis_loss = dis_real_loss + dis_fake_loss + grad_penalty
+
+        dis_loss.backward()
         optimizer_D.step()
 
         # Train G
         G.zero_grad()
         labels.fill_(real_label)
         dis_fake_out = D(fake_imgs)
-        dis_fake_loss = criterion(dis_fake_out, labels)
-        gen_loss = criterion(dis_fake_out, labels)
+        if config.loss == 'BCE':
+            gen_loss = criterion(dis_fake_out, labels)
+            gen_loss = gen_loss.mean()
+        elif config.loss == 'WGAN':
+            gen_loss = -torch.mean(dis_fake_out)
+
         gen_loss.backward()
-        gen_loss = gen_loss.mean()
         optimizer_G.step()
 
     # write to training log
