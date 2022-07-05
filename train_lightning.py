@@ -15,6 +15,7 @@ from generator import Generator
 from utils import weights_init
 from config import config
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class MNISTDataModule(pl.LightningDataModule):
     def __init__(self, batch_size=64, num_workers=4):
         super().__init__()
@@ -38,7 +39,7 @@ class MNISTGAN(pl.LightningModule):
         self.D = Discriminator(cfg.num_classes, cfg.num_d_filters)
         self.G.apply(weights_init)
         self.D.apply(weights_init)
-        self.fixed_noise = torch.randn(16, cfg.noise_size, 1, 1)
+        self.fixed_noise = torch.randn(16, cfg.noise_size, 1, 1).to(device)
 
     def forward(self, x):
         return self.G(x)
@@ -48,21 +49,19 @@ class MNISTGAN(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         real_imgs, _ = batch
-        noise = torch.randn(real_imgs.size(0), self.cfg.noise_size, 1, 1)
-        noise.type_as(real_imgs)
-        self.fixed_noise.type_as(real_imgs)
+        noise = torch.randn(real_imgs.size(0), self.cfg.noise_size, 1, 1).to(device)
 
         if optimizer_idx == 0:
             fake_imgs = self(noise)
-            fake_labels = torch.ones(real_imgs.size(0), 1)
+            fake_labels = torch.ones(real_imgs.size(0), 1).to(device)
             g_loss = self.adversarial_loss(self.D(fake_imgs), fake_labels)
 
             return {'loss': g_loss, 'log': {'g_loss': g_loss}, 'progress_bar': {'g_loss': g_loss}}
         else:
-            fake_labels = torch.zeros(real_imgs.size(0), 0)
+            fake_labels = torch.zeros(real_imgs.size(0), 0).to(device)
             fake_imgs = self(noise)
             d_loss_fake = self.adversarial_loss(self.D(fake_imgs.detach()), fake_labels)
-            real_labels = torch.ones(real_imgs.size(0), 1)
+            real_labels = torch.ones(real_imgs.size(0), 1).to(device)
             d_loss_real = self.adversarial_loss(self.D(real_imgs), real_labels)
             d_loss = d_loss_fake * self.cfg.alpha + d_loss_real * (1 - self.cfg.alpha)
 
