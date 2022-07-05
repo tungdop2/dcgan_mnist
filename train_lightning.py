@@ -83,7 +83,7 @@ class MNISTGAN(pl.LightningModule):
             torchvision.utils.save_image(grids, os.path.join(self.hparams.save_path, 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
         self.logger.experiment.add_image('fake_images', grids, self.current_epoch)
 
-cfg = config()
+cfg = config
 dm = MNISTDataModule(batch_size=cfg.batch_size, num_workers=cfg.num_workers)
 model = MNISTGAN(cfg)
 
