@@ -31,14 +31,14 @@ class MNISTDataModule(pl.LightningDataModule):
         return len(self.dataset)
 
 class MNISTGAN(pl.LightningModule):
-    def __init__(self, hparams):
+    def __init__(self, cfg):
         super().__init__()
-        self.hparams = hparams
-        self.G = Generator(hparams.num_classes, hparams.noise_size, hparams.num_g_filters)
-        self.D = Discriminator(hparams.num_classes, hparams.num_d_filters)
+        self.cfg = cfg
+        self.G = Generator(cfg.num_classes, cfg.noise_size, cfg.num_g_filters)
+        self.D = Discriminator(cfg.num_classes, cfg.num_d_filters)
         self.G.apply(weights_init)
         self.D.apply(weights_init)
-        self.fixed_noise = torch.randn(16, hparams.noise_size, 1, 1).type_as(self.G.weight)
+        self.fixed_noise = torch.randn(16, cfg.noise_size, 1, 1).type_as(self.G.weight)
 
     def forward(self, x):
         return self.G(x)
@@ -48,7 +48,7 @@ class MNISTGAN(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         real_imgs, _ = batch
-        noise = torch.randn(real_imgs.size(0), self.hparams.noise_size, 1, 1)
+        noise = torch.randn(real_imgs.size(0), self.cfg.noise_size, 1, 1)
         noise.type_as(real_imgs)
 
         if optimizer_idx == 0:
@@ -63,7 +63,7 @@ class MNISTGAN(pl.LightningModule):
             d_loss_fake = self.adversarial_loss(self.D(fake_imgs.detach()), fake_labels)
             real_labels = torch.ones(real_imgs.size(0), 1)
             d_loss_real = self.adversarial_loss(self.D(real_imgs), real_labels)
-            d_loss = d_loss_fake * self.hparams.alpha + d_loss_real * (1 - self.hparams.alpha)
+            d_loss = d_loss_fake * self.cfg.alpha + d_loss_real * (1 - self.cfg.alpha)
 
             return {'loss': d_loss, 'log': {'d_loss': d_loss}, 'progress_bar': {'d_loss': d_loss}}
 
@@ -80,16 +80,16 @@ class MNISTGAN(pl.LightningModule):
         fake_imgs = self.G(self.fixed_noise)
         grids = torchvision.utils.make_grid(fake_imgs, nrow=4, padding=2, normalize=True)
         if self.current_epoch % 50 == 0:
-            torchvision.utils.save_image(grids, os.path.join(self.hparams.save_path, 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
+            torchvision.utils.save_image(grids, os.path.join(self.cfg.save_path, 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
         self.logger.experiment.add_image('fake_images', grids, self.current_epoch)
 
-hparams = config
-dm = MNISTDataModule(batch_size=hparams.batch_size, num_workers=hparams.num_workers)
-model = MNISTGAN(hparams = hparams)
+cfg = config
+dm = MNISTDataModule(batch_size=cfg.batch_size, num_workers=cfg.num_workers)
+model = MNISTGAN(cfg)
 
 os.makedirs('./logger', exist_ok=True)
 logger = TensorBoardLogger(save_dir='./logger', name='mnist_gan')
-trainer = pl.Trainer(gpus=1, max_epochs=hparams.num_epochs, logger=logger, checkpoint_callback=False)
+trainer = pl.Trainer(gpus=1, max_epochs=cfg.num_epochs, logger=logger, checkpoint_callback=False)
 trainer.fit(model, dm)
 
 
