@@ -53,15 +53,15 @@ class MNISTGAN(pl.LightningModule):
 
         if optimizer_idx == 0:
             fake_imgs = self(noise)
-            fake_labels = torch.ones(real_imgs.size(0), 1).to(device)
+            fake_labels = torch.ones(real_imgs.size(0)).to(device)
             g_loss = self.adversarial_loss(self.D(fake_imgs), fake_labels)
 
             return {'loss': g_loss, 'log': {'g_loss': g_loss}, 'progress_bar': {'g_loss': g_loss}}
         else:
-            fake_labels = torch.zeros(real_imgs.size(0), 0).to(device)
+            fake_labels = torch.zeros(real_imgs.size(0)).to(device)
             fake_imgs = self(noise)
             d_loss_fake = self.adversarial_loss(self.D(fake_imgs.detach()), fake_labels)
-            real_labels = torch.ones(real_imgs.size(0), 1).to(device)
+            real_labels = torch.ones(real_imgs.size(0)).to(device)
             d_loss_real = self.adversarial_loss(self.D(real_imgs), real_labels)
             d_loss = d_loss_fake * self.cfg.alpha + d_loss_real * (1 - self.cfg.alpha)
 
