@@ -80,14 +80,19 @@ class MNISTGAN(pl.LightningModule):
         fake_imgs = self.G(self.fixed_noise)
         grids = torchvision.utils.make_grid(fake_imgs, nrow=4, padding=2, normalize=True)
         if self.current_epoch % 50 == 0:
-            torchvision.utils.save_image(grids, os.path.join(self.cfg.save_path, 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
+            torchvision.utils.save_image(grids, os.path.join('./output', 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
         self.logger.experiment.add_image('fake_images', grids, self.current_epoch)
+
+        torch.save(self.G.state_dict(), os.path.join('./ckpt', 'G.pth'))
+        torch.save(self.D.state_dict(), os.path.join('./ckpt', 'D.pth'))
 
 cfg = config
 dm = MNISTDataModule(batch_size=cfg.batch_size, num_workers=cfg.num_workers)
 model = MNISTGAN(cfg)
 
 os.makedirs('./logger', exist_ok=True)
+os.makedirs('./output', exist_ok=True)
+os.makedirs('./ckpt', exist_ok=True)
 logger = TensorBoardLogger(save_dir='./logger', name='mnist_gan')
 trainer = pl.Trainer(gpus=1, max_epochs=cfg.num_epochs, logger=logger, checkpoint_callback=False)
 trainer.fit(model, dm)
