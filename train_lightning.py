@@ -38,7 +38,7 @@ class MNISTGAN(pl.LightningModule):
         self.D = Discriminator(cfg.num_classes, cfg.num_d_filters)
         self.G.apply(weights_init)
         self.D.apply(weights_init)
-        self.fixed_noise = torch.randn(16, cfg.noise_size, 1, 1).type_as(self.G.weight)
+        self.fixed_noise = torch.randn(16, cfg.noise_size, 1, 1)
 
     def forward(self, x):
         return self.G(x)
@@ -50,6 +50,7 @@ class MNISTGAN(pl.LightningModule):
         real_imgs, _ = batch
         noise = torch.randn(real_imgs.size(0), self.cfg.noise_size, 1, 1)
         noise.type_as(real_imgs)
+        self.fixed_noise.type_as(real_imgs)
 
         if optimizer_idx == 0:
             fake_imgs = self(noise)
