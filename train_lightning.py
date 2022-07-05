@@ -83,13 +83,13 @@ class MNISTGAN(pl.LightningModule):
             torchvision.utils.save_image(grids, os.path.join(self.hparams.save_path, 'fake_imgs_epoch_{}.png'.format(self.current_epoch)))
         self.logger.experiment.add_image('fake_images', grids, self.current_epoch)
 
-cfg = config
-dm = MNISTDataModule(batch_size=cfg.batch_size, num_workers=cfg.num_workers)
-model = MNISTGAN(cfg)
+hparams = config
+dm = MNISTDataModule(batch_size=hparams.batch_size, num_workers=hparams.num_workers)
+model = MNISTGAN(hparams = hparams)
 
 os.makedirs('./logger', exist_ok=True)
 logger = TensorBoardLogger(save_dir='./logger', name='mnist_gan')
-trainer = pl.Trainer(gpus=1, max_epochs=cfg.num_epochs, logger=logger, checkpoint_callback=False)
+trainer = pl.Trainer(gpus=1, max_epochs=hparams.num_epochs, logger=logger, checkpoint_callback=False)
 trainer.fit(model, dm)
 
 
